@@ -5,7 +5,6 @@ import { useAuth } from '../../contexts/AuthContext'
 
 
 const profile = () => {
-
     const {user} = useAuth();
 
   return (
