@@ -1,30 +1,28 @@
-import { Alert, Button, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useState } from 'react'
-import ScreenWrapper from '../../components/ScreenWrapper'
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { hp, wp } from '../../helpers/common';
-import { theme } from '../../constants/theme';
-import Icon from '../../assets/Icons';
-import { useRouter } from 'expo-router'
+import { Alert, Button, Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import React, { useState } from "react";
+import ScreenWrapper from "../../components/ScreenWrapper";
+import { useAuth } from "../../contexts/AuthContext";
+import { supabase } from "../../lib/supabase";
+import { hp, wp } from "../../helpers/common";
+import { theme } from "../../constants/theme";
+import Icon from "../../assets/Icons";
+import { useRouter } from "expo-router";
+import Avatar from "../../components/Avatar";
 
 
 const Home = () => {
+  const { user, setAuth } = useAuth();
+  const router = useRouter();
 
-    const {user, setAuth} = useAuth();
-    const router = useRouter();
+  console.log("user: ", user);
 
-
-    console.log('user: ', user);
-
-    const onLogout = async () => {
-        //setAuth(null);
-        const {error} = await supabase.auth.signOut();
-        if(error) {
-            Alert.alert('Sign out', 'Error signing out');
-        }
-    }
-
+  //const onLogout = async () => {
+    //setAuth(null);
+  //  const { error } = await supabase.auth.signOut();
+  //  if (error) {
+  //    Alert.alert("Sign out", "Error signing out");
+  //  }
+  //};
 
   return (
     <ScreenWrapper bg="white">
@@ -32,13 +30,22 @@ const Home = () => {
         <View style={styles.header}>
           <Text style={styles.title}>RK_Tracker</Text>
           <View style={styles.icons}>
-            <Pressable onPress={()=> router.push('profile')}>
-              <Icon name="user" size={hp(3)} strokeWidth={2} color={theme.colors.text} />
+            <Pressable onPress={() => router.push("notifications")}>
+              <Icon name="mail" size={hp(3.5)} strokeWidth={2} color={theme.colors.text} />
+            </Pressable>
+            <Pressable onPress={() => router.push("profile")}>
+              <Avatar 
+                uri={user.user_metadata.image}
+                size={hp(4)}
+                rounded={theme.radius.sm}
+                style={{borderWitdh: 2}}
+              />
             </Pressable>
           </View>
         </View>
       </View>
-      <Button title='logout' onPress={onLogout} />
+      {/*<Button title="logout" onPress={onLogout} /> */}
+      
       {/* Írjuk ki a felhasználó nevét 
       
       <View>
@@ -47,44 +54,33 @@ const Home = () => {
       </View>
       
       */}
-      
     </ScreenWrapper>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 10,
-      marginHorizontal: wp(4),
-    },
-    title: {
-      color: theme.colors.text,
-      fontSize: hp(3),
-      fontWeight: theme.fonts.bold,
-    },
-    avatarImage: {
-      height: hp(4.3),
-      width: hp(4.3),
-      borderRadius: theme.radius.sm,
-      borderCurve: 'continuous',
-      borderColor: theme.colors.gray,
-      borderWidth: 3
-    },
-    icons: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      gap: 18
-    },
-    listStyle: {
-      paddingTop: 20,
-      paddingHorizontal: wp(4),
-    },
-})
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    marginHorizontal: wp(4),
+  },
+  title: {
+    color: theme.colors.text,
+    fontSize: hp(3),
+    fontWeight: theme.fonts.bold,
+  },
+  icons: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 16,
+    marginTop: 10,
+  },
+  
+});
