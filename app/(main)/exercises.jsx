@@ -10,6 +10,10 @@ import React, { useState, useEffect } from "react";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "expo-router";
+import { theme } from "../../constants/theme";
+import { hp } from "../../helpers/common";
+import Header from "../../components/Header";
+
 
 const Exercises = () => {
   const [categories, setCategories] = useState([]);
@@ -31,7 +35,7 @@ const Exercises = () => {
   return (
     <ScreenWrapper bg="white">
       <View style={styles.container}>
-        <Text style={styles.title}>Exercise Categories</Text>
+        <Header title="Categories" mb={40}/>
         <FlatList
           data={categories}
           keyExtractor={(item) => item.id}
@@ -59,10 +63,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   title: {
-    fontSize: 24,
+    fontSize: hp(2.5),
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
+    color: theme.colors.text,
   },
   card: {
     backgroundColor: "#f9f9f9",

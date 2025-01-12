@@ -1,12 +1,15 @@
-import { StyleSheet, Text, View, FlatList, Image } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useLocalSearchParams } from 'expo-router';
 import ScreenWrapper from '../../components/ScreenWrapper';
+import Header from '../../components/Header';
+import { useRouter } from 'expo-router';
 
 const CategoryExercises = () => {
   const [exercises, setExercises] = useState([]);
   const { id } = useLocalSearchParams(); // Az URL-ből olvassuk ki az id-t
+  const router = useRouter();
 
   useEffect(() => {
     fetchExercisesByCategory();
@@ -28,21 +31,26 @@ const CategoryExercises = () => {
 
   return (
     <ScreenWrapper bg="white">
-    <View style={styles.container}>
-      <Text style={styles.title}>Exercises</Text>
-      <FlatList
-        data={exercises}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Image source={{ uri: item.image_url }} style={styles.image} />
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.desc}>{item.description}</Text>
-            <Text style={styles.difficulty}>Difficulty: {item.difficulty}</Text>
-          </View>
-        )}
-      />
-    </View>
+      <View style={styles.container}>
+        <Header title="Exercises" mb={40} />
+        <FlatList
+          data={exercises}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => router.push(`/exerciseDetails?id=${item.id}`)} // Navigáció push-al
+            >
+              <Image source={{ uri: item.image_url }} style={styles.image} />
+              <View style={styles.textContainer}>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.desc}>{item.description}</Text>
+                <Text style={styles.difficulty}>Difficulty: {item.difficulty}</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
     </ScreenWrapper>
   );
 };
@@ -55,37 +63,41 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
   card: {
+    flexDirection: 'row',
     backgroundColor: '#f9f9f9',
-    padding: 15,
+    padding: 10,
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 20,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   image: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     borderRadius: 10,
-    marginBottom: 10,
+    marginRight: 15,
+  },
+  textContainer: {
+    flex: 1,
   },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 5,
   },
   desc: {
     fontSize: 14,
-    textAlign: 'center',
+    color: '#666',
     marginBottom: 5,
   },
   difficulty: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: 'gray',
+    color: '#333',
   },
 });
