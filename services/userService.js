@@ -24,6 +24,7 @@ export const updateUser = async (userId, data) => {
         .update(data)
         .eq('id', userId);
         if(error) {
+            console.log('error updating user: ', error);
             return {success: false, msg: error?.message};
         }
         return {success: true, data};

@@ -23,6 +23,7 @@ const Profile = () => {
     if (error) {
       Alert.alert("Sign out", "Error signing out");
     }
+    router.push('welcome');
   }
 
   const handleLogout = async () => {
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: hp(3),
-    fontWeight: '500',
+    fontWeight: '400',
     color: theme.colors.textDark,  
   },
   info: {

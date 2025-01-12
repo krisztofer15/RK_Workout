@@ -5,6 +5,8 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getUserData } from '../services/userService'
 
+
+
 const _layout = () => {
   return (
     <AuthProvider>
@@ -14,7 +16,7 @@ const _layout = () => {
 }
 
 const MainLayout = () => {
-    const {setAuth, setUserData} = useAuth();
+    const {user: currentUser, setAuth, setUserData} = useAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -35,7 +37,8 @@ const MainLayout = () => {
 
     const updateUserData = async (user) => {
       let res = await getUserData(user?.id);
-      if(res.success) setUserData(res.data);
+      let newUserMetadata = { ...user.user_metadata, ...res.data };
+      if (newUserMetadata) setUserData({ ...currentUser, user_metadata: newUserMetadata, ...user });
     }
   return (
     <Stack 

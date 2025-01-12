@@ -1,20 +1,21 @@
 import { Alert, Button, Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
-import { supabase } from "../../lib/supabase";
 import { hp, wp } from "../../helpers/common";
 import { theme } from "../../constants/theme";
 import Icon from "../../assets/Icons";
 import { useRouter } from "expo-router";
 import Avatar from "../../components/Avatar";
 
-
 const Home = () => {
   const { user, setAuth } = useAuth();
   const router = useRouter();
 
-  console.log("user: ", user);
+  useEffect(() => {
+    console.log("user have changed =============================");
+    console.log(user);
+  }, [user]);
 
   //const onLogout = async () => {
     //setAuth(null);
@@ -30,13 +31,16 @@ const Home = () => {
         <View style={styles.header}>
           <Text style={styles.title}>RK_Tracker</Text>
           <View style={styles.icons}>
+            <Pressable onPress={() => router.push("exercises")}>
+              <Icon name="dumbbel" size={hp(3.5)} strokeWidth={1.5} color={theme.colors.text} style={{marginTop: 4}} />
+            </Pressable>
             <Pressable onPress={() => router.push("notifications")}>
-              <Icon name="mail" size={hp(3.5)} strokeWidth={2} color={theme.colors.text} />
+              <Icon name="mail" size={hp(3)} strokeWidth={2} color={theme.colors.text} style={{marginTop: 7}} />
             </Pressable>
             <Pressable onPress={() => router.push("profile")}>
               <Avatar 
-                uri={user.user_metadata.image}
-                size={hp(4)}
+                uri={user?.user_metadata.image}
+                size={hp(4.5)}
                 rounded={theme.radius.sm}
                 style={{borderWitdh: 2}}
               />

@@ -70,7 +70,8 @@ const EditProfile = () => {
             else userData.image = null;
         }
         //Update user data
-        const res = await updateUser(currentUser?.id, userData);
+
+        const res = await updateUser(currentUser.id, userData);
         setLoading(false);
 
         if(res.success) {
