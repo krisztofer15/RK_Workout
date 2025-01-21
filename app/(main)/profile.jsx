@@ -69,7 +69,7 @@ const UserHeader = ({user, router, handleLogout}) => {
               rounded={theme.radius.xxl*1.4}
             />
             <Pressable style={styles.editIcon} onPress={() => router.push('editProfile')}>
-              <Icon name="edit" strokeWidth={2.5} size={20} />
+              <Icon name="edit" strokeWidth={2.5} size={20} color={theme.colors.textDark} />
             </Pressable>
           </View>
 

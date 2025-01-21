@@ -159,10 +159,14 @@ const styles = StyleSheet.create({
   cardContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#ffffff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
     padding: 10,
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 20,
   },
   card: {
     flex: 1,

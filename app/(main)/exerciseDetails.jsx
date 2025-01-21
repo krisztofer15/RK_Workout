@@ -1,18 +1,29 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, Vibration } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, Vibration, Animated, Easing, ScrollView } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useLocalSearchParams } from 'expo-router';
 import ScreenWrapper from '../../components/ScreenWrapper';
+import Svg, { Circle } from 'react-native-svg';
+import { theme } from '../../constants/theme';
+import { useAuth } from '../../contexts/AuthContext';
 
-const timeOptions = [30, 60, 90, 120, 180]; // Időzítési opciók másodpercekben
+// Animált SVG Circle létrehozása
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+const timeOptions = [30, 60, 90, 120, 180];
+const repsOptions = [5, 10, 15, 20, 25, 30]; // Ismétlés opciók
 
 const ExerciseDetails = () => {
   const [exercise, setExercise] = useState(null);
-  const { id } = useLocalSearchParams(); // Az URL-ből kapott id
+  const { id } = useLocalSearchParams();
 
-  const [timerValue, setTimerValue] = useState(60); // Kezdő idő (mp-ben)
+  const { user } = useAuth(); // Bejelentkezett felhasználó adatainak megszerzése
+  const [timerValue, setTimerValue] = useState(60);
   const [remainingTime, setRemainingTime] = useState(timerValue);
   const [isRunning, setIsRunning] = useState(false);
+  const [selectedReps, setSelectedReps] = useState(10); // Alapértelmezett ismétlések
+
+  const progress = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     fetchExerciseDetails();
@@ -33,13 +44,19 @@ const ExerciseDetails = () => {
     }
   };
 
-  // Visszaszámláló kezelése
   useEffect(() => {
     let timer;
     if (isRunning && remainingTime > 0) {
       timer = setInterval(() => {
         setRemainingTime((prev) => prev - 1);
       }, 1000);
+
+      Animated.timing(progress, {
+        toValue: 0,
+        duration: remainingTime * 1000,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      }).start();
     } else if (remainingTime === 0) {
       clearInterval(timer);
       setIsRunning(false);
@@ -48,81 +65,149 @@ const ExerciseDetails = () => {
     return () => clearInterval(timer);
   }, [isRunning, remainingTime]);
 
-  // Idő lejártának kezelése
   const handleTimerEnd = () => {
-    Vibration.vibrate(); // Telefon rezgés
+    Vibration.vibrate();
     Alert.alert('Time is up!', 'Your exercise timer has ended.', [{ text: 'OK' }]);
   };
 
-  // Formázza az időt MM:SS alakra
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60)
       .toString()
-      .padStart(2, '0'); // Két számjegyű perc
-    const seconds = (time % 60).toString().padStart(2, '0'); // Két számjegyű másodperc
+      .padStart(2, '0');
+    const seconds = (time % 60).toString().padStart(2, '0');
     return `${minutes}:${seconds}`;
   };
 
-  if (!exercise) {
+  const saveExerciseLog = async () => {
+    if (!user) {
+      Alert.alert('Hiba', 'Nem található bejelentkezett felhasználó.');
+      return;
+    }
+
+    const { data, error } = await supabase.from('exercise_logs').insert([
+      {
+        user_id: user.id, // Bejelentkezett felhasználó ID-ja
+        exercise_id: id, // Gyakorlat ID az URL alapján
+        reps: selectedReps,
+        duration: timerValue,
+      },
+    ]);
+
+    if (error) {
+      Alert.alert('Hiba', 'Nem sikerült menteni az adatokat.');
+      console.error(error);
+    } else {
+      console.log('Mentett adat:', data);
+    }
+  };
+
+  const CircularProgress = ({ size, strokeWidth }) => {
+    const radius = size / 2 - strokeWidth / 2;
+    const circumference = 2 * Math.PI * radius;
+
+    const animatedStrokeDashoffset = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [circumference, 0],
+    });
+
     return (
-      <ScreenWrapper bg="white">
-        <View style={styles.container}>
-          <Text style={styles.loading}>Loading...</Text>
-        </View>
-      </ScreenWrapper>
+      <View style={styles.progressContainer}>
+        <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#ddd"
+            strokeWidth={strokeWidth}
+            fill="none"
+          />
+          <AnimatedCircle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={theme.colors.primary}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={animatedStrokeDashoffset}
+            strokeLinecap="round"
+            transform={`rotate(-90, ${size / 2}, ${size / 2})`}
+          />
+        </Svg>
+        <Text style={styles.timerText}>{formatTime(remainingTime)}</Text>
+      </View>
     );
-  }
+  };
 
   return (
     <ScreenWrapper bg="white">
-      <View style={styles.container}>
-        <Text style={styles.title}>{exercise.name}</Text>
-        <Image source={{ uri: exercise.image_url }} style={styles.image} />
-        <Text style={styles.desc}>{exercise.description}</Text>
-        {exercise.reps && (
-            <Text style={styles.reps}>Recomended Reps: {exercise.reps}</Text>
-        )}
-        {/* Idő kiválasztása (két soros elrendezés) */}
-        <View style={styles.timeSelector}>
-          {timeOptions.map((time) => (
+      <ScrollView>
+        <View style={styles.container}>
+          <Text style={styles.title}>{exercise?.name || "Exercise"}</Text>
+          <Image source={{ uri: exercise?.image_url }} style={styles.image} />
+          <Text style={styles.desc}>{exercise?.description || "Description"}</Text>
+
+          {/* Ismétlések kiválasztása */}
+          <View style={styles.repsSelector}>
+            {repsOptions.map((reps) => (
+              <TouchableOpacity
+                key={reps}
+                style={[
+                  styles.repsButton,
+                  selectedReps === reps ? styles.selectedRepsButton : {},
+                ]}
+                onPress={() => setSelectedReps(reps)}
+              >
+                <Text style={styles.repsText}>{reps}x3</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Időtartam kiválasztása */}
+          <View style={styles.timeSelector}>
+            {timeOptions.map((time) => (
+              <TouchableOpacity
+                key={time}
+                style={[
+                  styles.timeButton,
+                  timerValue === time ? styles.selectedTimeButton : {},
+                ]}
+                onPress={() => {
+                  setTimerValue(time);
+                  setRemainingTime(time);
+                  progress.setValue(1);
+                }}
+              >
+                <Text style={styles.timeText}>{formatTime(time)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <CircularProgress size={200} strokeWidth={10} />
+
+          <View style={styles.buttonContainer}>
             <TouchableOpacity
-              key={time}
-              style={[
-                styles.timeButton,
-                timerValue === time ? styles.selectedTimeButton : {},
-              ]}
+              style={[styles.button, styles.startButton]}
               onPress={() => {
-                setTimerValue(time);
-                setRemainingTime(time);
+                setIsRunning(!isRunning);
+                if (!isRunning) saveExerciseLog();
               }}
             >
-              <Text style={styles.timeText}>{formatTime(time)}</Text>
+              <Text style={styles.buttonText}>{isRunning ? 'Stop' : 'Start'}</Text>
             </TouchableOpacity>
-          ))}
+            <TouchableOpacity
+              style={[styles.button, styles.resetButton]}
+              onPress={() => {
+                setIsRunning(false);
+                setRemainingTime(timerValue);
+                progress.setValue(1);
+              }}
+            >
+              <Text style={styles.buttonText}>Reset</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        {/* Visszaszámláló kijelzése */}
-        <Text style={styles.timer}>{formatTime(remainingTime)}</Text>
-
-        {/* Start / Stop / Reset gombok */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, isRunning ? styles.stopButton : styles.startButton]}
-            onPress={() => setIsRunning(!isRunning)}
-          >
-            <Text style={styles.buttonText}>{isRunning ? 'Stop' : 'Start'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.resetButton}
-            onPress={() => {
-              setIsRunning(false);
-              setRemainingTime(timerValue);
-            }}
-          >
-            <Text style={styles.buttonText}>Reset</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </ScrollView>
     </ScreenWrapper>
   );
 };
@@ -142,13 +227,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  loading: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
   image: {
-    width: '100%', // A kép teljes szélességet elfoglalja
+    width: '100%',
     height: 250,
     borderRadius: 10,
     marginBottom: 20,
@@ -159,9 +239,15 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 20,
   },
-  timeSelector: {
+    timeSelector: {
     flexDirection: 'row',
-    flexWrap: 'wrap', // Új sorba tördeli, ha nem fér el
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginBottom: 15,
+  },
+  repsSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
     marginBottom: 15,
   },
@@ -173,18 +259,37 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   selectedTimeButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: theme.colors.primary,
+  },
+  repsButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: '#ddd',
+    margin: 4,
+  },
+  selectedRepsButton: {
+    backgroundColor: theme.colors.primary,
+  },
+  repsText: {
+    color: '#fff',
+    fontWeight: 'semibold',
   },
   timeText: {
     fontSize: 18,
     color: '#fff',
     fontWeight: 'bold',
   },
-  timer: {
+  progressContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  timerText: {
+    position: 'absolute',
     fontSize: 32,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 10,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -197,17 +302,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   startButton: {
-    backgroundColor: 'green',
-  },
-  stopButton: {
-    backgroundColor: 'red',
+    backgroundColor: theme.colors.primary,
   },
   resetButton: {
-    backgroundColor: 'gray',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginHorizontal: 5,
+    backgroundColor: '#454545',
   },
   buttonText: {
     color: '#fff',

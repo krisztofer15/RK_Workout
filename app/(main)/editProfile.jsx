@@ -93,7 +93,7 @@ const EditProfile = () => {
                 <View style={styles.avatarContainer}>
                     <Image source={imageSource} style={styles.avatar} />
                     <Pressable style={styles.cameraIcon} onPress={onPickImage}>
-                        <Icon name="camera" size={20} strokeWidth={2.5} />
+                        <Icon name="camera" size={20} strokeWidth={2.5} color={theme.colors.primary} />
                     </Pressable>
                 </View>
                 <Text style={{fontSize: hp(1.5), color: theme.colors.text}}>
@@ -101,21 +101,21 @@ const EditProfile = () => {
                 </Text>
                 
                 <Input
-                    icon={<Icon name="user" />}
+                    icon={<Icon name="user" color={theme.colors.primary} />}
                     placeholder='Enter your name'
                     value={user.name}
                     onChangeText={value => setUser({...user, name: value})}
                 />
 
                 <Input
-                    icon={<Icon name="call" />}
+                    icon={<Icon name="call" color={theme.colors.primary} />}
                     placeholder='Enter your phone number'
                     value={user.phoneNumber}
                     onChangeText={value => setUser({...user, phoneNumber: value})}
                 />
 
                 <Input
-                    icon={<Icon name="location" />}
+                    icon={<Icon name="location" color={theme.colors.primary} />}
                     placeholder='Enter your address'
                     value={user.address}
                     onChangeText={value => setUser({...user, address: value})}
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.radius.xxl*1.8,
         borderCurve: 'continuous',
         borderWidth: 1,
-        borderColor: theme.colors.darkLight
+        borderColor: 'transparent',
     },
     cameraIcon: {
         position: 'absolute',
