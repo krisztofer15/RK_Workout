@@ -5,7 +5,7 @@ import {
   View,
   Dimensions,
 } from "react-native";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
 import { hp, wp } from "../../helpers/common";
@@ -16,6 +16,7 @@ import { Home as HomeIcon } from "lucide-react-native";
 import { Bell } from "lucide-react-native";
 import { Dumbbell } from "lucide-react-native";
 import { BarChart, PieChart } from "react-native-chart-kit";
+import { supabase } from "../../lib/supabase";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -86,8 +87,43 @@ const chartConfigPie = {
 const Home = () => {
   const { user } = useAuth();
   const router = useRouter();
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+
+    const fetchUnreadNotifications = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact" })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+
+      if (!error) {
+        setUnreadCount(count);
+      }
+    };
+
+    fetchUnreadNotifications();
+
+    const channel = supabase
+      .channel("notifications")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications" },
+        (payload) => {
+          console.log("Notification received:", payload);
+          fetchUnreadNotifications();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    }
+
     console.log("user have changed =============================");
     console.log(user);
   }, [user]);
@@ -113,7 +149,7 @@ const Home = () => {
               borderRadius: 10,
               overflow: "hidden",
             }}
-          />
+          />  
         </View>
 
         {/* Két kördiagram */}
@@ -202,18 +238,16 @@ const Home = () => {
             />
             <Text style={styles.navText}>Home</Text>
           </Pressable>
-          <Pressable
-            style={styles.navItem}
-            onPress={() => router.push("notifications")}
-          >
-            <Bell
-              size={hp(2.5)}
-              strokeWidth={1.2}
-              color={theme.colors.text}
-            />
-            <Text style={styles.navText}>
-              Notifications
-            </Text>
+          <Pressable style={styles.navItem} onPress={() => router.push("notifications")}>
+            <View>
+              <Bell size={hp(2.5)} strokeWidth={1.2} color={theme.colors.text} />
+              {unreadCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationCount}>{unreadCount}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.navText}>Notifications</Text>
           </Pressable>
           <Pressable
             style={styles.navItem}
@@ -345,5 +379,21 @@ const styles = StyleSheet.create({
     fontSize: hp(1.3),
     color: theme.colors.text,
     marginTop: 5,
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "#FF6600",
+    borderRadius: 15,
+    width: 18,
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  notificationCount: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
   },
 });

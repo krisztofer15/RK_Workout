@@ -10,6 +10,7 @@ import { theme } from '../constants/theme'
 import Input from '../components/Input'
 import Button from '../components/Button'
 import { supabase } from '../lib/supabase'
+import { createNotification } from '../services/notificationService';
 
 const SignUp = () => {
   const router = useRouter();
@@ -36,7 +37,7 @@ const SignUp = () => {
 
     setLoading(true);
 
-    const {data: {session}, error} = await supabase.auth.signUp({
+    const {data, error} = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -51,7 +52,22 @@ const SignUp = () => {
     //console.log('error: ', error);
     if(error){
       Alert.alert('Sign Up', error.message);
-      
+      return;
+    }
+
+    const userId = data?.user?.id;
+    if (!userId) {
+      Alert.alert('Sign Up', "User ID not found");
+      return;
+    }
+
+    console.log("User created with ID:", userId); // 🔥 Debug log
+
+    const notificationRes = await createNotification(userId, "Welcome", "Welcome to our app!");
+    if(!notificationRes.success){
+      console.log('Sign Up', notificationRes.msg);
+    }else {
+      console.log('Sign Up', "Notification sent to the user!");
     }
   }
 

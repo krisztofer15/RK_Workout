@@ -17,6 +17,7 @@ import Header from "../../components/Header";
 import { useRouter } from "expo-router";
 import { theme } from "../../constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
+import { createNotification } from "../../services/notificationService";
 
 const CategoryExercises = () => {
   const [exercises, setExercises] = useState([]);
@@ -34,16 +35,26 @@ const CategoryExercises = () => {
 
   const fetchExercisesByCategory = async () => {
     if (!id) return;
-    const { data, error } = await supabase
-      .from("exercises")
-      .select("*")
-      .eq("category_id", id);
 
-    if (error) {
-      console.error("Error fetching exercises:", error);
-    } else {
-      setExercises(data);
-    }
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    console.error("Error getting user:", userError);
+    return;
+  }
+
+  const userId = userData.user.id;
+
+  const { data, error } = await supabase
+    .from("exercises")
+    .select("*")
+    .eq("category_id", id)
+    .or(`user_id.eq.${userId},user_id.is.null`); // ✅ Szűrés: user_id lehet az aktuális user vagy NULL
+
+  if (error) {
+    console.error("Error fetching exercises:", error);
+  } else {
+    setExercises(data);
+  }
   };
 
   const addExercise = async () => {
@@ -67,6 +78,9 @@ const CategoryExercises = () => {
     if (error) {
       console.error("Error adding exercise", error);
     } else {
+      await createNotification(user.data.user.id, "New Task Added", `You created a new task: ${newExerciseName}`);
+      // 🔥 Felhasználónak jelzés, hogy sikeresen létrehozta a feladatot
+      Alert.alert("Success", "Your new exercise has been added successfully!");
       setModalVisible(false);
       setNewExerciseName("");
       setNewExerciseDescription("");

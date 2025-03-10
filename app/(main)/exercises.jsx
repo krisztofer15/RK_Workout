@@ -17,7 +17,7 @@ import { theme } from "../../constants/theme";
 import { hp } from "../../helpers/common";
 import Header from "../../components/Header";
 import { MaterialIcons } from "@expo/vector-icons"; // 🔹 Törlés ikonhoz
-import Icon from "../../assets/Icons";
+// import Icon from "../../assets/Icons";
 
 const Exercises = () => {
   const [categories, setCategories] = useState([]);
@@ -31,12 +31,24 @@ const Exercises = () => {
   }, []);
 
   const fetchCategories = async () => {
-    const { data, error } = await supabase.from("categories").select("*");
-    if (error) {
-      console.error("Error fetching categories", error);
-    } else {
-      setCategories(data);
-    }
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    console.error("Error getting user:", userError);
+    return;
+  }
+
+  const userId = userData.user.id;
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .or(`user_id.eq.${userId},user_id.is.null`); // ❗ Szűrjük az adott user ID-ra és azokra is, ahol NULL az user_id
+
+  if (error) {
+    console.error("Error fetching categories", error);
+  } else {
+    setCategories(data);
+  }
   };
 
   const addCategory = async () => {

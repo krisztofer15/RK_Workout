@@ -14,7 +14,6 @@ import { updateUser } from '../../services/userService'
 import { useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 
-
 const EditProfile = () => {
 
     const {user: currentUser, setUserData} = useAuth();

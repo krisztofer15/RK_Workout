@@ -5,8 +5,6 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getUserData } from '../services/userService'
 
-
-
 const _layout = () => {
   return (
     <AuthProvider>
