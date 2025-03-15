@@ -1,10 +1,4 @@
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  Dimensions,
-} from "react-native";
+import { ScrollView, Pressable, StyleSheet, Text, View, Dimensions } from "react-native";
 import React, { useEffect, useState } from "react";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
@@ -88,11 +82,13 @@ const Home = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mostUsedExercises, setMostUsedExercises] = useState([]);
 
   useEffect(() => {
-
     const fetchUnreadNotifications = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { count, error } = await supabase
@@ -119,18 +115,67 @@ const Home = () => {
         }
       )
       .subscribe();
-    
+
     return () => {
       supabase.removeChannel(channel);
-    }
+    };
 
     console.log("user have changed =============================");
     console.log(user);
   }, [user]);
 
+  useEffect(() => {
+    const fetchMostUsedExercise = async () => {
+      if (!user) return;
+
+      console.log("✅ Bejelenkezett felhasználó:", user?.id);
+
+      const { data, error } = await supabase
+        .from("exercise_logs")
+        .select("exercise_id, exercises!inner(id, name)")
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error fetching most used exercise:", error);
+        setMostUsedExercises([]);
+        return;
+      }
+
+      console.log("✅ Fetched exercise logs:", data);
+
+      if (!data || data.length === 0) {
+        setMostUsedExercises([]);
+        return;
+      }
+
+      const exerciseCount = {};
+      data.forEach((log) => {
+        const exerciseName = log.exercises?.name;
+        if (exerciseName) {
+          exerciseCount[exerciseName] = (exerciseCount[exerciseName] || 0) + 1;
+        }
+      });
+
+      console.log("✅ Exercise count:", exerciseCount);
+
+      // Top 3 leggyakoribb gyakorlat
+      const sortedExercises = Object.entries(exerciseCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3); // Csak az első 3
+
+      setMostUsedExercises(sortedExercises);
+    };
+
+    fetchMostUsedExercise();
+  }, [user]);
+
   return (
     <ScreenWrapper bg="white">
       <View style={styles.container}>
+        <ScrollView style={styles.scrollContainer} 
+          contentContainerStyle={styles.scrollContent} 
+          keyboardShouldPersistTaps="handled"
+        >
         <View style={styles.header}>
           <Text style={styles.title}>RK_Tracker</Text>
         </View>
@@ -149,14 +194,14 @@ const Home = () => {
               borderRadius: 10,
               overflow: "hidden",
             }}
-          />  
+          />
         </View>
 
         {/* Két kördiagram */}
         <View style={styles.pieChartRow}>
           <View style={styles.pieCard}>
             <Text style={styles.pieCardTitle}>Progress (Primary)</Text>
-            <PieChart 
+            <PieChart
               data={pieChartData1}
               width={screenWidth / 3} // Csökkentett szélesség
               height={120} // Csökkentett magasság
@@ -228,6 +273,37 @@ const Home = () => {
           </View>
         </View>
 
+        {/* Legtöbbet használt gyakorlat */}
+        {/* <View style={styles.card}>
+          <Text style={styles.cardTitle}>Most Used Exercise</Text>
+          <Text style={styles.mostUsedExerciseText}>
+            {mostUsedExercise || "Loading..."}
+          </Text>
+        </View> */}
+
+        <View style={styles.mostUsedContainer}>
+          <Text style={styles.sectionTitle}>Most frequently used exercises</Text>
+
+          {mostUsedExercises.length > 0 ? (
+            mostUsedExercises.map(([name, count], index) => (
+              <View key={index} style={styles.exerciseCard}>
+                <View style={styles.exerciseIcon}>
+                  <Text style={styles.exerciseRank}>
+                    {index + 1 === 1 ? "🥇" : index + 1 === 2 ? "🥈" : "🥉"}
+                  </Text>
+                </View>
+                <View style={styles.exerciseInfo}>
+                  <Text style={styles.exerciseName}>{name}</Text>
+                  <Text style={styles.exerciseCount}>{count} times</Text>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noDataText}>Nincs adat</Text>
+          )}
+        </View>
+      </ScrollView>
+
         {/* Alsó navigáció */}
         <View style={styles.bottomNavigation}>
           <Pressable style={styles.navItem} onPress={() => router.push("home")}>
@@ -238,9 +314,16 @@ const Home = () => {
             />
             <Text style={styles.navText}>Home</Text>
           </Pressable>
-          <Pressable style={styles.navItem} onPress={() => router.push("notifications")}>
+          <Pressable
+            style={styles.navItem}
+            onPress={() => router.push("notifications")}
+          >
             <View>
-              <Bell size={hp(2.5)} strokeWidth={1.2} color={theme.colors.text} />
+              <Bell
+                size={hp(2.5)}
+                strokeWidth={1.2}
+                color={theme.colors.text}
+              />
               {unreadCount > 0 && (
                 <View style={styles.notificationBadge}>
                   <Text style={styles.notificationCount}>{unreadCount}</Text>
@@ -395,5 +478,76 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 12,
     fontWeight: "bold",
+  },
+  mostUsedContainer: {
+    marginHorizontal: 20,
+    marginVertical: 20,
+    marginBottom: 100, // ezt el ne felejtsem kivenni ha alatta levo tartalmat hozok létre
+    backgroundColor: "#FFF",
+    padding: 15,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#454545",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+
+  exerciseCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8F9FA",
+    padding: 12,
+    borderRadius: 10,
+    marginVertical: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+
+  exerciseIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+
+  exerciseRank: {
+    fontSize: 20,
+  },
+
+  exerciseInfo: {
+    flex: 1,
+  },
+
+  exerciseName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: theme.colors.primary,
+  },
+
+  exerciseCount: {
+    fontSize: hp(1.5),
+    color: "#666",
+  },
+
+  noDataText: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#777",
+    marginVertical: 10,
   },
 });

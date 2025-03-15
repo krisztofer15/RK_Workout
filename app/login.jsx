@@ -26,17 +26,22 @@ const Login = () => {
     let email = emailRef.current.trim();
     let password = passwordRef.current.trim();
     setLoading(true);
-    const {error} = await supabase.auth.signInWithPassword({
+
+    const {data, error} = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
     setLoading(false);
-
     console.log('error: ', error);
+
     if(error){
       Alert.alert('Login', error.message);
+      return;
     }
+
+    await setAuth(data.user);
+    router.push('/home');
   }
 
   return (

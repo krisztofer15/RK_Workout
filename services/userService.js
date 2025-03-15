@@ -19,17 +19,35 @@ export const getUserData = async (userId) => {
 
 export const updateUser = async (userId, data) => {
     try {
-        const { error } = await supabase
-        .from('users')
-        .update(data)
-        .eq('id', userId);
-        if(error) {
-            console.log('error updating user: ', error);
-            return {success: false, msg: error?.message};
+        // Supabase users tábla frissítése
+        const { error: userError } = await supabase
+            .from('users')
+            .update(data)
+            .eq('id', userId);
+
+        if (userError) {
+            console.log('Error updating user: ', userError);
+            return {success: false, msg: userError.message};
         }
-        return {success: true, data};
-    } catch(error) {
-        console.log('got error: ', error);
+
+        // Supabase auth metadata frissítése
+        const { error: authError } = await supabase.auth.updateUser({
+            data: {
+                name: data.name,
+                image: data.image,
+                bio: data.bio,
+                address: data.address,
+                phoneNumber: data.phoneNumber
+            }
+        });
+
+        if (authError) {
+            console.log('Error updating auth metadata: ', authError);
+            return {success: false, msg: authError.message};
+        }
+        return {success: true};
+    } catch (error) {
+        console.log('Unexpected error: ', error);
         return {success: false, msg: error.message};
     }
 }
