@@ -16,7 +16,7 @@ import * as ImagePicker from 'expo-image-picker'
 
 const EditProfile = () => {
 
-    const {user: currentUser, setUserData} = useAuth();
+    const {user: currentUser, setAuth} = useAuth();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
@@ -56,6 +56,7 @@ const EditProfile = () => {
     const onSubmit = async () => {
         let userData = {...user};
         let {name, phoneNumber, address, image, bio} = userData;
+        
         if(!name || !phoneNumber || !bio || !address || !image) {
             Alert.alert('Please fill all the fields');
             return;
@@ -65,16 +66,21 @@ const EditProfile = () => {
 
         if(typeof image === 'object' && image?.uri) {
             let imageRes = await uploadFile('profile', image?.uri, true);
-            if(imageRes.success) userData.image = imageRes.data;
+            if (imageRes.success) userData.image = imageRes.data;
             else userData.image = null;
         }
         //Update user data
-
         const res = await updateUser(currentUser.id, userData);
         setLoading(false);
 
         if(res.success) {
-            setUserData({...currentUser, user_metadata:  {...currentUser.user_metadata, ...userData}});
+            const { refreshUser } = useAuth();
+            await refreshUser();
+
+            setTimeout(() => {
+                console.log("🔥 User state after refresh:", user)
+            }, 500)
+            
             router.push('/profile');
         }
     }

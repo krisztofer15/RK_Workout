@@ -1,14 +1,16 @@
-import { View, Text } from 'react-native'
-import React, { useEffect } from 'react'
-import { Stack, useRouter } from 'expo-router'
-import { AuthProvider, useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
-import { getUserData } from '../services/userService'
+import { View, Text } from 'react-native';
+import React, { useEffect } from 'react';
+import { Stack, useRouter } from 'expo-router';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import { getUserData } from '../services/userService';
+import Toast from 'react-native-toast-message';
 
 const _layout = () => {
   return (
     <AuthProvider>
       <MainLayout />
+      <Toast />
     </AuthProvider>
   )
 }
@@ -47,4 +49,4 @@ const MainLayout = () => {
   )
 }
 
-export default _layout
+export default _layout;

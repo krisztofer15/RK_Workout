@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  Alert,
-  TextInput,
-  Animated,
+import { View, Text, StyleSheet, Pressable, Alert, TextInput, Animated, FlatList, ScrollView,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { supabase } from "../../lib/supabase";
 import { theme } from "../../constants/theme";
 import { wp, hp } from "../../helpers/common";
+import ScreenWrapper from "../../components/ScreenWrapper";
+import Header from "../../components/Header";
 import LottieView from "lottie-react-native"; // Konfetti animációhoz
+import { Check } from "lucide-react-native";
 
 const Goals = () => {
   const route = useRoute();
@@ -21,15 +17,20 @@ const Goals = () => {
 
   const [goal, setGoal] = useState(null);
   const [completedReps, setCompletedReps] = useState("");
+  const [completedGoals, setCompletedGoals] = useState([]);
   const [progressAnim] = useState(new Animated.Value(0));
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiKey, setConfettiKey] = useState(0); // 🔹 Új kulcs az újraindításhoz
 
   useEffect(() => {
     fetchGoalData();
-    setShowConfetti(false);
-    resetConfetti();
   }, [goalId]);
+
+  useEffect(() => {
+    if (goal?.user_id) {
+      fetchCompletedGoals(goal.user_id);
+    }
+  }, [goal?.user_id]);
 
   const fetchGoalData = async () => {
     const { data, error } = await supabase
@@ -53,7 +54,24 @@ const Goals = () => {
     }).start();
 
     if (data.progress === 100) {
-        setTimeout(() => triggerConfetti(), 3000);
+      setTimeout(() => triggerConfetti(), 3000);
+    }
+  };
+
+  const fetchCompletedGoals = async (userId) => {
+    if (!userId) return;
+
+    const { data, error } = await supabase
+      .from("goals")
+      .select("*")
+      .eq("user_id", goal.user_id)
+      .eq("progress", 100)
+      .order("end_date", { ascending: false });
+
+    if (error) {
+      console.error("Hiba a teljesített célok lekérdezésekor:", error);
+    } else {
+      setCompletedGoals(data);
     }
   };
 
@@ -76,8 +94,8 @@ const Goals = () => {
 
     const newProgress = Math.min(
       100,
-      ((goal.progress / 100) * goal.target_amount + Number(completedReps)) /
-        goal.target_amount *
+      (((goal.progress / 100) * goal.target_amount + Number(completedReps)) /
+        goal.target_amount) *
         100
     );
 
@@ -93,7 +111,8 @@ const Goals = () => {
     }
 
     if (Math.round(newProgress) === 100) {
-        triggerConfetti();
+      triggerConfetti();
+      fetchCompletedGoals(goal.user_id);
     }
 
     Alert.alert("Siker!", "Hozzáadtad a teljesítményt!");
@@ -110,65 +129,98 @@ const Goals = () => {
   }
 
   return (
-    <View style={styles.container}>
-      {/* 🎉 KONFETTI ANIMÁCIÓ 🎉 */}
-      {showConfetti && (
-        <LottieView
-          key={confettiKey} // 🔹 Ezzel biztosítjuk az újraindítást
-          source={require("../../assets/lottie/confetti.json")}
-          autoPlay
-          loop={false}
-          style={styles.confettiAnimation}
-        />
-      )}
+    <ScreenWrapper bg="white">
+      <Header
+        title="My Goals details"
+        mb={40}
+        backButtonStyle={{ marginLeft: 15 }}
+      />
 
-      <View style={styles.goalInfoContainer}>
-        <Text style={styles.goalTitle}>{goal.exercise_name}</Text>
-        <Text style={styles.goalDetails}>
-          {goal.target_amount} {goal.unit} - {goal.duration_days} nap alatt
-        </Text>
-      </View>
-
-      {/* Progress Bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressTextRow}>
-          <Text style={styles.progressText}>Teljesítve:</Text>
-          <Text style={styles.progressText}>{goal.progress}%</Text>
-        </View>
-        <View style={styles.progressBarBackground}>
-          <Animated.View
-            style={[
-              styles.progressBarFill,
-              {
-                width: progressAnim.interpolate({
-                  inputRange: [0, 100],
-                  outputRange: ["0%", "100%"],
-                }),
-              },
-            ]}
+      <View style={styles.container}>
+        {/* 🎉 KONFETTI ANIMÁCIÓ 🎉 */}
+        {showConfetti && (
+          <LottieView
+            key={confettiKey} // 🔹 Ezzel biztosítjuk az újraindítást
+            source={require("../../assets/lottie/confetti.json")}
+            autoPlay
+            loop={false}
+            style={styles.confettiAnimation}
           />
+        )}
+
+        <View style={styles.goalInfoContainer}>
+          <Text style={styles.goalTitle}>{goal.exercise_name}</Text>
+          <Text style={styles.goalDetails}>
+            {goal.target_amount} {goal.unit} - in {goal.duration_days} days
+          </Text>
         </View>
-      </View>
 
-      {/* Manuális adatbevitel */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Pl: 100"
-          keyboardType="numeric"
-          value={completedReps}
-          onChangeText={setCompletedReps}
-        />
-        <Pressable style={styles.addButton} onPress={handleAddReps}>
-          <Text style={styles.addButtonText}>+</Text>
-        </Pressable>
-      </View>
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressTextRow}>
+            <Text style={styles.progressText}>Completed:</Text>
+            <Text style={styles.progressText}>{goal.progress}%</Text>
+          </View>
+          <View style={styles.progressBarBackground}>
+            <Animated.View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 100],
+                    outputRange: ["0%", "100%"],
+                  }),
+                },
+              ]}
+            />
+          </View>
+        </View>
 
-      {/* Vissza gomb */}
-      <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backButtonText}>Vissza</Text>
-      </Pressable>
-    </View>
+        {/* Manuális adatbevitel */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Pl: 100"
+            keyboardType="numeric"
+            value={completedReps}
+            onChangeText={setCompletedReps}
+          />
+          <Pressable style={styles.addButton} onPress={handleAddReps}>
+            <Text style={styles.addButtonText}>+</Text>
+          </Pressable>
+        </View>
+
+        {/* Teljesített célok listája */}
+        {completedGoals.length > 0 && (
+          <View style={styles.completedGoalsContainer}>
+            <Text style={styles.completedTitle}>Already completed goals:</Text>
+
+            <FlatList
+              data={completedGoals}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={false}
+              style={{ maxHeight: hp(40) }} // 🔥 Ha sok elem van, ne nyúljon túl nagyra
+              renderItem={({ item }) => (
+                <View style={styles.completedGoalItem}>
+                  <View style={styles.goalTextContainer}>
+                    <Text style={styles.goalExercise}>
+                      {item.exercise_name}
+                    </Text>
+                    <Text style={styles.goalDetails}>
+                      {item.target_amount} {item.unit} • {item.duration_days}{" "}
+                      nap
+                    </Text>
+                  </View>
+                  <View style={styles.checkIcon}>
+                    <Check size={20} color="white" />
+                  </View>
+                </View>
+              )}
+            />
+          </View>
+        )}
+      </View>
+    </ScreenWrapper>
   );
 };
 
@@ -177,10 +229,9 @@ export default Goals;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
-    paddingHorizontal: wp(6),
-    justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: wp(6),
+    marginTop: hp(2),
   },
   goalInfoContainer: {
     alignItems: "center",
@@ -275,5 +326,58 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     zIndex: 10,
+  },
+  completedGoalsContainer: {
+    marginTop: 50,
+    width: "90%",
+    padding: 15,
+    backgroundColor: "#FFF",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+    alignItems: "center",
+  },
+  completedTitle: {
+    fontSize: hp(2.2),
+    fontWeight: "bold",
+    color: theme.colors.primary,
+    marginBottom: 10,
+  },
+  completedGoalItem: {
+    flexDirection: "row",
+    backgroundColor: "#F8F9FA",
+    padding: 12,
+    borderRadius: 10,
+    marginVertical: 6,
+    width: "100%",
+    justifyContent: "space-between",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  goalTextContainer: {
+    flexDirection: "column",
+    gap: 2,
+  },
+  goalExercise: {
+    fontSize: hp(2),
+    fontWeight: "bold",
+    color: "#333",
+  },
+  goalDetails: {
+    fontSize: hp(1.8),
+    color: "#666",
+  },
+  checkIcon: {
+    backgroundColor: theme.colors.primary,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

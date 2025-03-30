@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import Toast from 'react-native-toast-message';
 
 // Új értesítés létrehozása
 export const createNotification = async (userId, title, message) => {
@@ -14,6 +15,14 @@ export const createNotification = async (userId, title, message) => {
     console.error('Error creating notification:', error.message);
     return { success: false, msg: error.message };
   }
+
+  Toast.show({
+    type: "info",
+    text1: title,
+    text2: message,
+    visibilityTime: 4000,
+    autoHide: true,
+  })
 
   return { success: true, msg: 'Notification created successfully' };
 };

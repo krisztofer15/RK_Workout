@@ -40,7 +40,7 @@ const Login = () => {
       return;
     }
 
-    await setAuth(data.user);
+    setAuth(data.user);
     router.push('/home');
   }
 

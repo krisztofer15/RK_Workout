@@ -9,7 +9,7 @@ import {
   Modal,
   TextInput,
 } from "react-native";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, act } from "react";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
 import { router, useRouter } from "expo-router";
@@ -31,24 +31,37 @@ const Profile = () => {
   const [goalUnit, setGoalUnit] = useState("reps");
   const [goalDays, setGoalDays] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const { refreshUser } = useAuth();
 
   useFocusEffect(
     useCallback(() => {
-      const fetchGoals = async () => {
-        const { data, error } = await supabase
-          .from("goals")
-          .select("*")
-          .eq("user_id", user.id);
+      console.log("👤 Aktuális user az AuthContextben: ", user);
+      if (!user?.id) return;
+      console.log("👀 User változott:", user)
 
-        if (error) {
-          console.error("Hiba a célok lekérdezésekor:", error);
-        } else {
-          setGoals(data);
+      const fetchData = async () => {
+        try {
+          console.log("🔄 Frissített felhasználói adatok lekérése...");
+          await refreshUser();
+  
+          // Célok lekérdezése
+          const { data: goalsData, error: goalsError } = await supabase
+            .from("goals")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("progress", { ascending: true });
+  
+          if (!goalsError) {
+            const activeGoals = goalsData.filter((goal) => goal.progress < 100);
+            setGoals(activeGoals);
+          }
+        } catch (error) {
+          console.error("Hiba az adatok frissítésekor:", error);
         }
       };
-
-      fetchGoals();
-    }, [user.id])
+  
+      fetchData();
+    }, [user])
   );
 
   const addGoal = async () => {
@@ -64,6 +77,7 @@ const Profile = () => {
       unit: goalUnit,
       duration_days: parseInt(goalDays),
       end_date: new Date(Date.now() + parseInt(goalDays) * 24 * 60 * 60 * 1000),
+      progress: 0,
     };
 
     const { error } = await supabase.from("goals").insert([newGoal]);
@@ -77,8 +91,11 @@ const Profile = () => {
       const { data } = await supabase
         .from("goals")
         .select("*")
-        .eq("user_id", user.id);
-      setGoals(data);
+        .eq("user_id", user.id)
+        .order("progress", { ascending: true });
+
+      const activeGoals = data.filter((goal) => goal.progress < 100);
+      setGoals(activeGoals);
     }
   };
 
@@ -93,8 +110,11 @@ const Profile = () => {
       const { data } = await supabase
         .from("goals")
         .select("*")
-        .eq("user_id", user.id);
-      setGoals(data);
+        .eq("user_id", user.id)
+        .order("progress", { ascending: true });
+
+      const activeGoals = data.filter((goal) => goal.progress < 100);
+      setGoals(activeGoals);
     }
   };
 
@@ -126,7 +146,7 @@ const Profile = () => {
   };
 
   return (
-    <ScreenWrapper bg="white">
+    <ScreenWrapper bg="white" key={user?.id}>
       <UserHeader
         user={user}
         router={router}
@@ -215,7 +235,7 @@ const UserHeader = ({
                 name="edit"
                 strokeWidth={2.5}
                 size={20}
-                color={theme.colors.textDark}
+                color={theme.colors.primary}
               />
             </Pressable>
           </View>
@@ -269,29 +289,34 @@ const UserHeader = ({
             </Text>
           ) : (
             <FlatList
-  data={goals}
-  keyExtractor={(item) => item.id}
-  renderItem={({ item }) => (
-    <Pressable
-      onPress={() => router.push({ pathname: "/goals", params: { goalId: item.id } })}
-      style={styles.goalItem}
-    >
-      <Text style={styles.goalText}>
-        {item.exercise_name}: {item.target_amount} {item.unit} {item.duration_days} nap alatt
-      </Text>
-      <Pressable
-        onPress={(e) => {
-          e.stopPropagation();
-          deleteGoal(item.id);
-        }}
-        style={styles.deleteButton}
-      >
-        <Text style={{ color: "white" }}>Törlés</Text>
-      </Pressable>
-    </Pressable>
-  )}
-/>
-
+              data={goals}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() =>
+                    router.push({
+                      pathname: "/goals",
+                      params: { goalId: item.id },
+                    })
+                  }
+                  style={styles.goalItem}
+                >
+                  <Text style={styles.goalText}>
+                    {item.exercise_name}: {item.target_amount} {item.unit}{" "}
+                    in {item.duration_days} days
+                  </Text>
+                  <Pressable
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      deleteGoal(item.id);
+                    }}
+                    style={styles.deleteButton}
+                  >
+                    <Text style={{ color: "white" }}>Delete</Text>
+                  </Pressable>
+                </Pressable>
+              )}
+            />
           )}
 
           {/* Új cél hozzáadása gomb */}
@@ -299,7 +324,9 @@ const UserHeader = ({
             onPress={() => setModalVisible(true)}
             style={styles.addButton}
           >
-            <Text style={{ color: "white", fontWeight: "bold" }}>+ Új cél hozzáadása</Text>
+            <Text style={{ color: "white", fontWeight: "bold" }}>
+              + Add New Goal
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -402,7 +429,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.sm,
     justifyContent: "center",
     alignItems: "center",
-
   },
   addButton: {
     backgroundColor: "#FF6000",
@@ -467,5 +493,5 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.textLigth,
     marginVertical: 20,
     width: "100%",
-  }
+  },
 });

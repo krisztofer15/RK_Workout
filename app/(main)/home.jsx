@@ -11,6 +11,7 @@ import { Bell } from "lucide-react-native";
 import { Dumbbell } from "lucide-react-native";
 import { BarChart, PieChart } from "react-native-chart-kit";
 import { supabase } from "../../lib/supabase";
+import Toast from "react-native-toast-message";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -78,6 +79,14 @@ const chartConfigPie = {
   labelColor: (opacity = 1) => `rgba(69, 69, 69, ${opacity})`,
 };
 
+const showToast = () => {
+  Toast.show({
+    type: "success",
+    text1: "Sikeres művelet!",
+    text2: "Ez egy teszt értesítés.",
+  });
+};
+
 const Home = () => {
   const { user } = useAuth();
   const router = useRouter();
@@ -105,16 +114,16 @@ const Home = () => {
     fetchUnreadNotifications();
 
     const channel = supabase
-      .channel("notifications")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications" },
-        (payload) => {
-          console.log("Notification received:", payload);
-          fetchUnreadNotifications();
-        }
-      )
-      .subscribe();
+    .channel("notifications")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "notifications" },
+      (payload) => {
+        console.log("🔔 Notification change:", payload);
+        fetchUnreadNotifications(); // Frissítés a változás után
+      }
+    )
+    .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
@@ -273,14 +282,7 @@ const Home = () => {
           </View>
         </View>
 
-        {/* Legtöbbet használt gyakorlat */}
-        {/* <View style={styles.card}>
-          <Text style={styles.cardTitle}>Most Used Exercise</Text>
-          <Text style={styles.mostUsedExerciseText}>
-            {mostUsedExercise || "Loading..."}
-          </Text>
-        </View> */}
-
+        {/* Leggyakrabban használt gyakorlatok */}
         <View style={styles.mostUsedContainer}>
           <Text style={styles.sectionTitle}>Most frequently used exercises</Text>
 

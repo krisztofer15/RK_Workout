@@ -5,13 +5,13 @@ import BackButton from './BackButton';
 import { hp } from '../helpers/common';
 import { theme } from '../constants/theme';
 
-const Header = ({title, showBackButton = true, mb = 10}) => {
+const Header = ({title, showBackButton = true, mb = 10, backButtonStyle}) => {
     const router = useRouter();
   return (
     <View style={[styles.container, {marginBottom: mb}]}>
       {
         showBackButton && (
-            <View style={styles.backButton}>
+            <View style={[styles.backButton, backButtonStyle]}>
                 <BackButton router={router} />
             </View>
         )

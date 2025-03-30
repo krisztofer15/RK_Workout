@@ -45,6 +45,8 @@ export const updateUser = async (userId, data) => {
             console.log('Error updating auth metadata: ', authError);
             return {success: false, msg: authError.message};
         }
+        await refreshUser();
+
         return {success: true};
     } catch (error) {
         console.log('Unexpected error: ', error);

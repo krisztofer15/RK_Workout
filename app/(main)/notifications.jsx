@@ -5,6 +5,7 @@ import Header from '../../components/Header';
 import { supabase } from '../../lib/supabase';
 import { deleteNotification, deleteAllNotifications, markAsRead, markAllAsRead } from '../../services/notificationService';
 import Icon from '../../assets/Icons';
+import Toast from 'react-native-toast-message';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -31,6 +32,32 @@ const Notifications = () => {
     };
 
     fetchNotifications();
+
+    // 🚀 Valós idejű frissítés (Realtime Supabase)
+    const channel = supabase
+      .channel("notifications")
+      .on(
+        "postgres_changes",
+        {event: "INSERT", schema: "public", table: "notifications"},
+        (payload) => {
+          console.log("🔔 Új értesítés érkezett:", payload.new);
+          setNotifications((prev) => [payload.new, ...prev]);
+
+          //✅ Megjelenítjük az animált Toast értesítést
+          Toast.show({
+            type: "success",
+            text1: payload.new.title,
+            text2: payload.new.message,
+            visibilityTime: 4000,
+            autoHide: true,
+          });
+        }
+      )
+      .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
   }, []);
 
   // Egy értesítés törlése
@@ -38,6 +65,7 @@ const Notifications = () => {
     const res = await deleteNotification(id);
     if (res.success) {
       setNotifications(notifications.filter(notif => notif.id !== id));
+      setUnreadCount((prevCount) => Math.max(prevCount - 1, 0));
     } else {
       Alert.alert('Error', res.msg);
     }
@@ -59,6 +87,7 @@ const Notifications = () => {
     const res = await markAsRead(id);
     if (res.success) {
       setNotifications(notifications.map(notif => notif.id === id ? { ...notif, is_read: true } : notif));
+      setUnreadCount((prevCount) => Math.max(prevCount - 1, 0));
     } else {
       Alert.alert('Error', res.msg);
     }
@@ -70,6 +99,7 @@ const Notifications = () => {
     const res = await markAllAsRead(userId);
     if (res.success) {
       setNotifications(notifications.map(notif => ({ ...notif, is_read: true })));
+      setUnreadCount(0);
     } else {
       Alert.alert('Error', res.msg);
     }
@@ -79,6 +109,8 @@ const Notifications = () => {
     <ScreenWrapper bg="white">
       <View style={styles.container}>
         <Header title="Notifications" mb={40} />
+
+        <Toast />
 
         {/* Műveletek gombok */}
         <View style={styles.actions}>

@@ -5,38 +5,44 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    const refreshUser = async () => {
+        try {
+            const { data, error } = await supabase.auth.getUser();
+            if (!error && data?.user) {
+                console.log("✅ Felhasználó frissítve:", data.user);
+                setUser({...data.user});
+            }
+        } catch (error) {
+            console.error("❌ Hiba a refreshUser függvényben:", error);
+        }
+    };
 
     const setAuth = async (authUser) => {
         if (!authUser) {
             setUser(null);
             return;
         }
-        const { data: freshUserData, error } = await supabase.auth.getUser();
-        if (error) {
-            console.error('Error fetching user: ', error);
-        } else {
-            setUser(freshUserData.user);
-        }
+        setUser(authUser);
     };
 
     useEffect(() => {
-        const { data: authListener } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                if (session) {
-                    await setAuth(session.user);
-                } else {
-                    setUser(null);
-                }
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session) {
+                await refreshUser();
+            } else {
+                setUser(null);
             }
-        );
+        });
 
         return () => {
             authListener.subscription.unsubscribe();
-        };
+        }
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, setAuth }}>
+        <AuthContext.Provider value={{ user, setAuth, refreshUser }}>
             {children}
         </AuthContext.Provider>
     )

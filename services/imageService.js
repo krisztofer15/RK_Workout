@@ -27,13 +27,13 @@ export const uploadFile = async (folderName, fileUri, isImage = true) => {
         });
         let imageData = decode(fileBase64);
 
-        let { data, error } = await supabase
+        const { data, error } = await supabase
             .storage
             .from('uploads')
             .upload(fileName, imageData, {
                 cacheControl: '3600',
                 upsert: false,
-                contentType: isImage ? 'image/*' : 'video/*'
+                contentType: isImage ? 'image/png' : 'video/mp4'
             });
 
         if (error) {
