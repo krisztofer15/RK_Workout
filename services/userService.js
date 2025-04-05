@@ -17,39 +17,47 @@ export const getUserData = async (userId) => {
     }
 }
 
-export const updateUser = async (userId, data) => {
+export const updateUser = async (userId, data, refreshUser) => {
     try {
-        // Supabase users tábla frissítése
-        const { error: userError } = await supabase
-            .from('users')
-            .update(data)
-            .eq('id', userId);
-
-        if (userError) {
-            console.log('Error updating user: ', userError);
-            return {success: false, msg: userError.message};
+      // 1. Users tábla frissítés
+      const { error: userError } = await supabase
+        .from('users')
+        .update(data)
+        .eq('id', userId);
+  
+      if (userError) {
+        console.log('Error updating user: ', userError);
+        return { success: false, msg: userError.message };
+      }
+  
+      // 2. Auth metadata frissítés
+      const { error: authError } = await supabase.auth.updateUser({
+        data: {
+          name: data.name,
+          image: data.image,
+          bio: data.bio,
+          address: data.address,
+          phoneNumber: data.phoneNumber
         }
-
-        // Supabase auth metadata frissítése
-        const { error: authError } = await supabase.auth.updateUser({
-            data: {
-                name: data.name,
-                image: data.image,
-                bio: data.bio,
-                address: data.address,
-                phoneNumber: data.phoneNumber
-            }
-        });
-
-        if (authError) {
-            console.log('Error updating auth metadata: ', authError);
-            return {success: false, msg: authError.message};
-        }
-        await refreshUser();
-
-        return {success: true};
+      });
+  
+      if (authError) {
+        console.log('Error updating auth metadata: ', authError);
+        return { success: false, msg: authError.message };
+      }
+  
+      // 3. Session frissítés
+      await supabase.auth.refreshSession();
+  
+      // 4. 👉 FELHASZNÁLÓ FRISSÍTÉSE AZONNAL CONTEXTBEN!
+      if (refreshUser) {
+        await refreshUser(); // ez fontos
+      }
+  
+      return { success: true };
     } catch (error) {
-        console.log('Unexpected error: ', error);
-        return {success: false, msg: error.message};
+      console.log('Unexpected error: ', error);
+      return { success: false, msg: error.message };
     }
-}
+  }
+  

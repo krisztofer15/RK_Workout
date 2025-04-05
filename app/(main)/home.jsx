@@ -134,29 +134,23 @@ const Home = () => {
   }, [user]);
 
   useEffect(() => {
+    if (!user?.id) return;
+  
     const fetchMostUsedExercise = async () => {
-      if (!user) return;
-
       console.log("✅ Bejelenkezett felhasználó:", user?.id);
-
       const { data, error } = await supabase
         .from("exercise_logs")
         .select("exercise_id, exercises!inner(id, name)")
         .eq("user_id", user.id);
-
+  
       if (error) {
         console.error("Error fetching most used exercise:", error);
         setMostUsedExercises([]);
         return;
       }
-
+  
       console.log("✅ Fetched exercise logs:", data);
-
-      if (!data || data.length === 0) {
-        setMostUsedExercises([]);
-        return;
-      }
-
+  
       const exerciseCount = {};
       data.forEach((log) => {
         const exerciseName = log.exercises?.name;
@@ -164,19 +158,17 @@ const Home = () => {
           exerciseCount[exerciseName] = (exerciseCount[exerciseName] || 0) + 1;
         }
       });
-
-      console.log("✅ Exercise count:", exerciseCount);
-
-      // Top 3 leggyakoribb gyakorlat
+  
       const sortedExercises = Object.entries(exerciseCount)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 3); // Csak az első 3
-
+        .slice(0, 3);
+  
       setMostUsedExercises(sortedExercises);
     };
-
+  
     fetchMostUsedExercise();
-  }, [user]);
+  }, [user?.id]); // csak akkor fut újra, ha user.id változik
+  
 
   return (
     <ScreenWrapper bg="white">

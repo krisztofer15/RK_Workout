@@ -38,7 +38,7 @@ const MainLayout = () => {
     const updateUserData = async (user) => {
       let res = await getUserData(user?.id);
       let newUserMetadata = { ...user.user_metadata, ...res.data };
-      if (newUserMetadata) setUserData({ ...currentUser, user_metadata: newUserMetadata, ...user });
+      if (newUserMetadata) setUserData({ ...user, user_metadata: newUserMetadata });
     }
   return (
     <Stack 

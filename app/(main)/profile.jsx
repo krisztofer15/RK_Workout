@@ -35,34 +35,34 @@ const Profile = () => {
 
   useFocusEffect(
     useCallback(() => {
-      console.log("👤 Aktuális user az AuthContextben: ", user);
-      if (!user?.id) return;
-      console.log("👀 User változott:", user)
-
+      let isActive = true;
+  
       const fetchData = async () => {
-        try {
-          console.log("🔄 Frissített felhasználói adatok lekérése...");
-          await refreshUser();
+        if (!user?.id || !isActive) return;
   
-          // Célok lekérdezése
-          const { data: goalsData, error: goalsError } = await supabase
-            .from("goals")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("progress", { ascending: true });
+        console.log("🔄 Frissített felhasználói adatok lekérése...");
+        await refreshUser();
   
-          if (!goalsError) {
-            const activeGoals = goalsData.filter((goal) => goal.progress < 100);
-            setGoals(activeGoals);
-          }
-        } catch (error) {
-          console.error("Hiba az adatok frissítésekor:", error);
+        const { data: goalsData, error: goalsError } = await supabase
+          .from("goals")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("progress", { ascending: true });
+  
+        if (!goalsError && isActive) {
+          const activeGoals = goalsData.filter((goal) => goal.progress < 100);
+          setGoals(activeGoals);
         }
       };
   
       fetchData();
-    }, [user])
+  
+      return () => {
+        isActive = false; // cleanup
+      };
+    }, []) // üres lista
   );
+  
 
   const addGoal = async () => {
     if (!goalText || !goalAmount || !goalDays) {

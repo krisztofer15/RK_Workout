@@ -14,9 +14,10 @@ import { updateUser } from '../../services/userService'
 import { useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 
+
 const EditProfile = () => {
 
-    const {user: currentUser, setAuth} = useAuth();
+    const {user: currentUser, refreshUser} = useAuth();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
@@ -31,11 +32,11 @@ const EditProfile = () => {
     useEffect(() => {
         if(currentUser) {
             setUser({
-                name: currentUser.user_metadata.name,
-                phoneNumber: currentUser.user_metadata.phoneNumber,
-                image: currentUser.user_metadata.image,
-                bio: currentUser.user_metadata.bio,
-                address: currentUser.user_metadata.address
+                name: currentUser.user_metadata?.name || '',
+        phoneNumber: currentUser.user_metadata?.phoneNumber || '',
+        image: currentUser.user_metadata?.image || null,
+        bio: currentUser.user_metadata?.bio || '',
+        address: currentUser.user_metadata?.address || '',
             });
         }
     }, [currentUser])
@@ -70,18 +71,13 @@ const EditProfile = () => {
             else userData.image = null;
         }
         //Update user data
-        const res = await updateUser(currentUser.id, userData);
+        const res = await updateUser(currentUser.id, userData, refreshUser);
         setLoading(false);
 
         if(res.success) {
-            const { refreshUser } = useAuth();
-            await refreshUser();
-
-            setTimeout(() => {
-                console.log("🔥 User state after refresh:", user)
-            }, 500)
-            
             router.push('/profile');
+        } else {
+            Alert.alert('Hiba', res.msg || 'Valami hiba történt.');
         }
     }
 
