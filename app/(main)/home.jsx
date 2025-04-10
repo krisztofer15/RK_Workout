@@ -173,14 +173,14 @@ const Home = () => {
   return (
     <ScreenWrapper bg="white">
       <View style={styles.container}>
-        <ScrollView style={styles.scrollContainer} 
-          contentContainerStyle={styles.scrollContent} 
-          keyboardShouldPersistTaps="handled"
-        >
         <View style={styles.header}>
           <Text style={styles.title}>RK_Tracker</Text>
         </View>
 
+        <ScrollView style={styles.scrollContainer} 
+          contentContainerStyle={styles.scrollContent} 
+          keyboardShouldPersistTaps="handled"
+        >
         {/* Fő tartalom ide jöhet a barchart */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Exercise Completion Overview</Text>

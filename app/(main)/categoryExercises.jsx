@@ -80,7 +80,7 @@ const CategoryExercises = () => {
     } else {
       await createNotification(user.data.user.id, "New Task Added", `You created a new task: ${newExerciseName}`);
       // 🔥 Felhasználónak jelzés, hogy sikeresen létrehozta a feladatot
-      Alert.alert("Success", "Your new exercise has been added successfully!");
+      //Alert.alert("Success", "Your new exercise has been added successfully!");
       setModalVisible(false);
       setNewExerciseName("");
       setNewExerciseDescription("");
@@ -145,7 +145,7 @@ const CategoryExercises = () => {
       </View>
 
       {/* Modális ablak új gyakorlat létrehozásához */}
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
+      <Modal visible={modalVisible} animationType="fade" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Exercise</Text>
@@ -169,7 +169,7 @@ const CategoryExercises = () => {
             />
             <TextInput
               style={styles.input}
-              placeholder="Difficulty (e.g. Easy, Medium, Hard)"
+              placeholder="Difficulty (e.g. easy, medium, hard)"
               value={newExerciseDifficulty}
               onChangeText={setNewExerciseDifficulty}
             />

@@ -157,7 +157,7 @@ const Profile = () => {
       />
 
       {/* Új cél hozzáadása modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
+      <Modal visible={modalVisible} animationType="fade" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Új cél beállítása</Text>

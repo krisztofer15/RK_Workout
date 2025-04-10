@@ -12,9 +12,8 @@ const Avatar = ({
     style = {},
 }) => {
   return (
-    <Image 
+    <Image
         source={getUserImageSrc(uri)}
-                     
         transition={100}
         style={[styles.avatar, { height: size, width: size, borderRadius: rounded }, style]}
     />

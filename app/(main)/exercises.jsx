@@ -131,7 +131,7 @@ const Exercises = () => {
       </View>
 
       {/* Modális ablak új kategória létrehozásához */}
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
+      <Modal visible={modalVisible} animationType="fade" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Category</Text>

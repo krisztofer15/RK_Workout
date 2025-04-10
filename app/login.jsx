@@ -72,9 +72,6 @@ const Login = () => {
             secureTextEntry
             onChangeText={value=> passwordRef.current = value}
           />
-          <Text style={styles.forgotPassword}>
-            Forgot Password?
-          </Text>
 
           {/* Login Button */}
           <Button title={'Login'} loading={loading} onPress={onSubmit} />
@@ -86,7 +83,7 @@ const Login = () => {
             Don't have an account?
           </Text>
           <Pressable onPress={()=> router.push('signUp')}>
-            <Text style={[styles.footerText, {color: theme.colors.primaryDark, fontWeight: theme.fonts.semibold}]}>Sign up</Text>
+            <Text style={[styles.footerText, {color: theme.colors.primary, fontWeight: theme.fonts.semibold}]}>Sign up</Text>
           </Pressable>
         </View>
       </View>

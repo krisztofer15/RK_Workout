@@ -55,6 +55,7 @@ const SignUp = () => {
       return;
     }
 
+    // Ellenőrizzük, hogy kaptunk-e vissza user ID-t
     const userId = data?.user?.id;
     if (!userId) {
       Alert.alert('Sign Up', "User ID not found");
@@ -63,6 +64,7 @@ const SignUp = () => {
 
     console.log("User created with ID:", userId); // 🔥 Debug log
 
+    // A notificationService.js fájlból meghívunk egy függvényt, ami létrehoz egy új sort a notifications táblában Supabase-ben. Ez a "Welcome" értesítés.
     const notificationRes = await createNotification(userId, "Welcome", "Welcome to our app!");
     if(!notificationRes.success){
       console.log('Sign Up', notificationRes.msg);
@@ -115,7 +117,7 @@ const SignUp = () => {
             Already have an account!
           </Text>
           <Pressable onPress={()=> router.push('login')}>
-            <Text style={[styles.footerText, {color: theme.colors.primaryDark, fontWeight: theme.fonts.semibold}]}>Login</Text>
+            <Text style={[styles.footerText, {color: theme.colors.primary, fontWeight: theme.fonts.semibold}]}>Login</Text>
           </Pressable>
         </View>
       </View>
