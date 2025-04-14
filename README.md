@@ -1,6 +1,6 @@
 # RK_Workout - Edzés Nyilvántartó Alkalmazás
 
-<img src="assets/images/logo.png" alt="RK_Workout Logo" width="200"/>
+<img src="assets/images/Logo.png" alt="RK_Workout Logo" width="200"/>
 
 ## Projekt Áttekintés
 
