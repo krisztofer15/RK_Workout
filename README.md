@@ -1,50 +1,99 @@
-# Welcome to your Expo app 👋
+# RK_Workout - Edzés Nyilvántartó Alkalmazás
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+![RK_Workout Logo](assets/images/icon.png)
 
-## Get started
+## Projekt Áttekintés
 
-1. Install dependencies
+Az RK_Workout egy modern edzésnyilvántartó alkalmazás, amely segít a felhasználóknak nyomon követni edzéseiket, gyakorlataikat és fejlődésüket. Az alkalmazás React Native és Expo keretrendszerrel készült, Supabase adatbázissal a háttérben.
+
+### Főbb Funkciók
+
+- **Felhasználói fiók kezelése**: Regisztráció, bejelentkezés, profil kezelése
+- **Gyakorlatok böngészése**: Különböző kategóriákba rendezett edzésgyakorlatok
+- **Edzés nyilvántartás**: Gyakorlatok, ismétlések és időtartamok rögzítése
+- **Időzítő**: Beépített időzítő a gyakorlatok végrehajtásához
+- **Statisztikák**: Edzési előrehaladás és statisztikák megtekintése
+- **Modern UI**: Animációk és haptikus visszajelzések a jobb felhasználói élményért
+
+## Telepítés és Futtatás
+
+### Előfeltételek
+
+- Node.js (v16 vagy újabb)
+- npm vagy yarn
+- Expo CLI
+- Android Studio (Android fejlesztéshez) vagy Xcode (iOS fejlesztéshez)
+
+### Telepítés
+
+1. Klónozd le a repository-t:
+
+   ```bash
+   git clone https://github.com/krisztofer15/RK_Workout.git
+   cd RK_Workout
+   ```
+
+2. Telepítsd a függőségeket:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+### Futtatás
 
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Az alkalmazás indítása fejlesztői módban:
 
 ```bash
-npm run reset-project
+npm start
+# vagy
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+A megjelenő QR kódot beolvashatod az Expo Go alkalmazással (Android) vagy a kamera alkalmazással (iOS).
 
-## Learn more
+Specifikus platformon való futtatás:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+# Android
+npm run android
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# iOS
+npm run ios
 
-## Join the community
+# Web
+npm run web
+```
 
-Join our community of developers creating universal apps.
+## Technológiai Stack
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **Frontend**: React Native, Expo
+- **Navigáció**: Expo Router
+- **Állapotkezelés**: React Context API
+- **Backend**: Supabase (PostgreSQL adatbázis, Auth, Storage)
+- **UI Komponensek**: React Native elemek, egyedi komponensek
+- **Animációk**: React Native Animated, Expo Haptics
+
+## Projekt Struktúra
+
+```
+RK_Workout/
+├── app/                   # Alkalmazás képernyők és navigáció
+│   ├── (auth)/            # Hitelesítési képernyők
+│   ├── (main)/            # Fő alkalmazás képernyők
+│   └── _layout.jsx        # Fő elrendezés és navigáció
+├── assets/                # Képek, fontok és egyéb statikus fájlok
+├── components/            # Újrafelhasználható komponensek
+├── constants/             # Konstansok és konfigurációs fájlok
+├── contexts/              # React Context-ek
+├── helpers/               # Segédfüggvények
+├── lib/                   # Külső könyvtárak konfigurációja (pl. Supabase)
+└── services/              # API és adatszolgáltatások
+```
+
+## Kapcsolat
+
+Készítette: [Kóczé Krisztofer](https://github.com/krisztofer15)
+
+---
+
+ 2025 RK_Workout. Minden jog fenntartva.
