@@ -214,7 +214,7 @@ const Notifications = () => {
           }
         ]}
       >
-        <Header title="Értesítések" mb={20} />
+        <Header title="Notifications" mb={20} />
 
         <Toast />
 
@@ -230,7 +230,7 @@ const Notifications = () => {
               onPress={handleDeleteAll}
               activeOpacity={0.8}
             >
-              <Text style={styles.buttonText}>Összes törlése</Text>
+              <Text style={styles.buttonText}>Delete All</Text>
             </TouchableOpacity>
           </MotiView>
           
@@ -244,7 +244,7 @@ const Notifications = () => {
               onPress={handleMarkAllAsRead}
               activeOpacity={0.8}
             >
-              <Text style={styles.buttonText}>Összes olvasott</Text>
+              <Text style={styles.buttonText}>Mark All as Read</Text>
             </TouchableOpacity>
           </MotiView>
         </View>

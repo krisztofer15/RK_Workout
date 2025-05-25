@@ -115,7 +115,7 @@ const Goals = () => {
       fetchCompletedGoals(goal.user_id);
     }
 
-    Alert.alert("Siker!", "Hozzáadtad a teljesítményt!");
+    // Alert.alert("Siker!", "Hozzáadtad a teljesítményt!");
     fetchGoalData();
     setCompletedReps("");
   };
